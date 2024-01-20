@@ -1,33 +1,29 @@
-window.addEventListener('load',()=>{
+window.addEventListener('load', () => {
     const form = document.querySelector("#new-task-form")
     const input = document.querySelector("#task-input")
     const list_el = document.querySelector(".list")
-    const lst_el = document.querySelector(".lst")
 
-    loadTasks()
+    // Load tasks from local storage on page load
+    loadTasks();
 
-    form.addEventListener("submit",(e)=>{
+    form.addEventListener("submit", (e) => {
         e.preventDefault();
-        
+
         const task = input.value
-        
-        if(!task)
-        {
-            alert("Please input a Task")
+
+        if (!task) {
+            alert("Please input a task");
             return;
-        }
-        else{
+        } else {
             // Create a new task element
-            let newTask = document.createElement("lst");
-            newTask.innerHTML =  newTask.innerHTML + `<div class="box">
-            <div class="done"><button><img src="done.svg" alt=""></button></div>
+            let newTask = document.createElement("div");
+            newTask.className = "box";
+            newTask.innerHTML = `<div class="done"><button><img src="done.svg" alt=""></button></div>
                 <input type="textarea" class="text" value="${task}" readonly>
                 <div class="but flex">
-                <div class="but-1"><button>Edit</button></div>
-                <div class="but-2"><button>Delete</button></div>
-                
-            </div>
-        </div>`;
+                    <div class="but-1"><button>Edit</button></div>
+                    <div class="but-2"><button>Delete</button></div>
+                </div>`;
 
             // Append the new task element to the list
             list_el.appendChild(newTask);
@@ -35,10 +31,10 @@ window.addEventListener('load',()=>{
             // Clear the input field
             input.value = "";
 
-            saveTasks()
+            // Save tasks to local storage
+            saveTasks();
         }
     })
-    
 
     list_el.addEventListener("click", (event) => {
         const targetButton = event.target.closest("button");
@@ -54,27 +50,23 @@ window.addEventListener('load',()=>{
                 // Remove the readonly attribute
                 if (textToSave) {
                     textToSave.removeAttribute("readonly");
+                    
                 }
-            }
-            else if(action === "save"){
+            } else if (action === "save") {
                 targetButton.innerText = "Edit"
-                textToSave.setAttribute("readonly","readonly")
+                textToSave.setAttribute("readonly", "readonly")
                 
-                saveTasks()
-            }
-            else if (action === "delete") {
+                // Save tasks to local storage after editing
+                saveTasks();
+            } else if (action === "delete") {
                 const deleteContent = targetButton.closest(".box");
-    
+
                 if (deleteContent) {
-                    // Check if deleteContent is a child of lst
-                    const lstElement = deleteContent.closest("lst");
-    
-                    if (lstElement) {
-                        lstElement.removeChild(deleteContent);
-                    } else {
-                        console.error("lst not found for deleteContent");
-                    }
-                    saveTasks()
+                    // Check if deleteContent is a child of list_el
+                    list_el.removeChild(deleteContent);
+
+                    // Save tasks to local storage after deleting
+                    saveTasks();
                 } else {
                     console.error("Element not found");
                 }
@@ -82,8 +74,7 @@ window.addEventListener('load',()=>{
         }
     });
 
-
-    list_el.addEventListener("click",(event)=>{
+    list_el.addEventListener("click", (event) => {
         const circle = event.target.closest("button");
         const textToChange = circle.closest(".box").querySelector(".text")
 
@@ -97,11 +88,12 @@ window.addEventListener('load',()=>{
                     textToChange.style.color = "red";
                     circleImg.src = "done.svg";
                 }
-                saveTasks()
+
+                // Save tasks to local storage after marking as done
+                saveTasks();
             }
         }
-
-    })
+    });
 
     function saveTasks() {
         // Get all task elements and extract their innerHTML
@@ -127,8 +119,4 @@ window.addEventListener('load',()=>{
             });
         }
     }
-
-
 });
-
-
