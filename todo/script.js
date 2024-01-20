@@ -1,112 +1,106 @@
-window.addEventListener('load',()=>{
+window.addEventListener('load', () => {
     const form = document.querySelector("#new-task-form")
     const input = document.querySelector("#task-input")
     const list_el = document.querySelector(".list")
-    const lst_el = document.querySelector(".lst")
 
-    loadTasks()
+    // Load tasks from local storage on page load
+    loadTasks();
 
-    form.addEventListener("submit",(e)=>{
+    form.addEventListener("submit", (e) => {
         e.preventDefault();
-        
-        const task = input.value
-        
-        if(!task)
-        {
-            alert("Please input a Task")
+
+        const taskText = input.value;
+
+        if (!taskText) {
+            alert("Please input a task");
             return;
-        }
-        else{
+        } else {
+            // Create a new task object
+            const newTask = {
+                text: taskText,
+                color: "red", // Default text color
+                isDone: false // Default circle state
+            };
+
             // Create a new task element
-            let newTask = document.createElement("lst");
-            newTask.innerHTML =  newTask.innerHTML + `<div class="box">
-            <div class="done"><button><img src="done.svg" alt=""></button></div>
-                <input type="textarea" class="text" value="${task}" readonly>
-                <div class="but flex">
-                <div class="but-1"><button>Edit</button></div>
-                <div class="but-2"><button>Delete</button></div>
-                
-            </div>
-        </div>`;
+            const newTaskElement = createTaskElement(newTask);
 
             // Append the new task element to the list
-            list_el.appendChild(newTask);
+            list_el.appendChild(newTaskElement);
 
             // Clear the input field
             input.value = "";
 
-            saveTasks()
+            // Save tasks to local storage
+            saveTasks();
         }
-    })
-    
+    });
 
     list_el.addEventListener("click", (event) => {
         const targetButton = event.target.closest("button");
-        const textToSave = targetButton.closest(".box").querySelector(".text");
 
         if (targetButton) {
             const action = targetButton.innerText.toLowerCase();
+            const taskElement = targetButton.closest(".box");
+            const textElement = taskElement.querySelector(".text");
 
             if (action === "edit") {
                 console.log('Edit button clicked');
                 targetButton.innerText = "Save";
 
                 // Remove the readonly attribute
-                if (textToSave) {
-                    textToSave.removeAttribute("readonly");
+                if (textElement) {
+                    textElement.removeAttribute("readonly");
                 }
-            }
-            else if(action === "save"){
+            } else if (action === "save") {
                 targetButton.innerText = "Edit"
-                textToSave.setAttribute("readonly","readonly")
-                
-                saveTasks()
-            }
-            else if (action === "delete") {
-                const deleteContent = targetButton.closest(".box");
-    
-                if (deleteContent) {
-                    // Check if deleteContent is a child of lst
-                    const lstElement = deleteContent.closest("lst");
-    
-                    if (lstElement) {
-                        lstElement.removeChild(deleteContent);
-                    } else {
-                        console.error("lst not found for deleteContent");
-                    }
-                    saveTasks()
-                } else {
-                    console.error("Element not found");
-                }
+                textElement.setAttribute("readonly", "readonly");
+
+                // Save tasks to local storage after editing
+                saveTasks();
+            } else if (action === "delete") {
+                // Check if deleteContent is a child of list_el
+                list_el.removeChild(taskElement);
+
+                // Save tasks to local storage after deleting
+                saveTasks();
             }
         }
     });
 
-
-    list_el.addEventListener("click",(event)=>{
+    list_el.addEventListener("click", (event) => {
         const circle = event.target.closest("button");
-        const textToChange = circle.closest(".box").querySelector(".text")
 
         if (circle) {
+            const taskElement = circle.closest(".box");
+            const textElement = taskElement.querySelector(".text");
             const circleImg = circle.querySelector("img");
+
             if (circleImg) {
                 if (circleImg.src.endsWith("done.svg")) {
-                    textToChange.style.color = "#0dff00";
+                    textElement.style.color = "#0dff00";
                     circleImg.src = "complete.svg";
                 } else {
-                    textToChange.style.color = "red";
+                    textElement.style.color = "red";
                     circleImg.src = "done.svg";
                 }
-                saveTasks()
+
+                // Save tasks to local storage after marking as done
+                saveTasks();
             }
         }
-
-    })
+    });
 
     function saveTasks() {
-        // Get all task elements and extract their innerHTML
+        // Get all task elements and extract their task data
         const taskElements = Array.from(list_el.children);
-        const tasks = taskElements.map(taskElement => taskElement.innerHTML);
+        const tasks = taskElements.map(taskElement => {
+            return {
+                text: taskElement.querySelector(".text").value,
+                color: taskElement.querySelector(".text").style.color,
+                isDone: taskElement.querySelector("img").src.endsWith("complete.svg")
+            };
+        });
 
         // Save tasks to local storage
         localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -120,15 +114,22 @@ window.addEventListener('load',()=>{
             // Parse the JSON and recreate task elements
             const tasks = JSON.parse(storedTasks);
             tasks.forEach(task => {
-                let newTask = document.createElement("div");
-                newTask.className = "box";
-                newTask.innerHTML = task;
-                list_el.appendChild(newTask);
+                const newTaskElement = createTaskElement(task);
+                list_el.appendChild(newTaskElement);
             });
         }
     }
 
-
+    function createTaskElement(task) {
+        // Create a new task element
+        const newTaskElement = document.createElement("div");
+        newTaskElement.className = "box";
+        newTaskElement.innerHTML = `<div class="done"><button><img src="${task.isDone ? 'complete.svg' : 'done.svg'}" alt=""></button></div>
+            <input type="textarea" class="text" value="${task.text}" style="color: ${task.color};" readonly>
+            <div class="but flex">
+                <div class="but-1"><button>Edit</button></div>
+                <div class="but-2"><button>Delete</button></div>
+            </div>`;
+        return newTaskElement;
+    }
 });
-
-
